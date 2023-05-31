@@ -6,16 +6,21 @@ using UnityEngine.InputSystem;
 
 public class PlayerMover : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed;
+    [SerializeField] private float runSpeed;
+    [SerializeField] private float walkSpeed;
     [SerializeField] private float jumpForce;
 
     private CharacterController controller;
     private Vector3 moveDir;
     private float ySpeed = 0;
+    private Animator animator;
+    private bool isWalking;
+    private float moveSpeed;
 
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
+        animator = GetComponent<Animator>();
     }
 
     private void Update()
@@ -26,8 +31,22 @@ public class PlayerMover : MonoBehaviour
 
     private void Move()
     {
+        if (moveDir.magnitude == 0)
+        {
+            moveSpeed = Mathf.Lerp(moveSpeed, 0, 0.1f);
+        }
+        else if (isWalking)
+        {
+            moveSpeed = Mathf.Lerp(walkSpeed, 0, 0.5f);
+        }
+        else
+            moveSpeed = Mathf.Lerp(runSpeed, 0, 0.5f);
+
         controller.Move(transform.forward * moveDir.z * moveSpeed * Time.deltaTime);
         controller.Move(transform.right * moveDir.x * moveSpeed * Time.deltaTime);
+        animator.SetFloat("YSpeed", moveDir.z, 0.1f, Time.deltaTime);
+        animator.SetFloat("XSpeed", moveDir.x, 0.1f, Time.deltaTime);
+        animator.SetFloat("moveSpeed", moveSpeed);
     }
 
     private void OnMove(InputValue input)
@@ -53,5 +72,10 @@ public class PlayerMover : MonoBehaviour
     {
         RaycastHit hit;
         return Physics.SphereCast(transform.position + Vector3.up * 1 , 0.5f, Vector3.down, out hit, 0.6f);
+    }
+
+    private void OnWalk(InputValue input)
+    {
+        isWalking = input.isPressed;
     }
 }
